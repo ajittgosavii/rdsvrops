@@ -9414,34 +9414,7 @@ def show_migration_configuration():
         help="Provide your Anthropic API key for AI-powered insights"
     )
     
-    if st.button("💾 Save Configuration", type="primary", use_container_width=True):
-        st.session_state.migration_params = {
-            'source_engine': source_engine,
-            'target_engine': target_engine,
-            'data_size_gb': data_size_gb,
-            'num_applications': num_applications,
-            'num_stored_procedures': num_stored_procedures,
-            'migration_timeline_weeks': migration_timeline_weeks,
-            'team_size': team_size,
-            'team_expertise': team_expertise,
-            'region': region,
-            'use_direct_connect': use_direct_connect,
-            'bandwidth_mbps': bandwidth_mbps,
-            'migration_budget': migration_budget,
-            'anthropic_api_key': anthropic_api_key,
-            'estimated_migration_cost': 0,
-            # ADD THESE NEW GROWTH PARAMETERS:
-            'annual_data_growth': annual_data_growth,
-            'annual_user_growth': annual_user_growth,
-            'annual_transaction_growth': annual_transaction_growth,
-            'growth_scenario': growth_scenario,
-            'seasonality_factor': seasonality_factor,
-            'scaling_strategy': scaling_strategy
-        }
-        
-        st.success("✅ Configuration saved! Proceed to Environment Setup.")
-        st.balloons()
-
+    
 def show_environment_analysis():
     """Show environment analysis dashboard"""
     
