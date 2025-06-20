@@ -8177,7 +8177,7 @@ def show_environment_analysis_tab():
                     st.write(f"Workload Pattern: {specs.get('workload_pattern', 'N/A')}")
                     st.write(f"Environment Type: {specs.get('environment_type', 'N/A')}")
 
-"""Environment setup with vROps option"""
+#"""Environment setup with vROps option"""
     
         st.markdown("## 📊 Environment Configuration")
     
