@@ -9405,15 +9405,7 @@ def show_migration_configuration():
         st.success("✅ Configuration saved! Proceed to Environment Setup.")
         st.balloons()
 
-    # AI Configuration
-    st.markdown("### 🤖 AI Integration")
-    
-    anthropic_api_key = st.text_input(
-        "Anthropic API Key (Optional)",
-        type="password",
-        help="Provide your Anthropic API key for AI-powered insights"
-    )
-    
+      
     
 def show_environment_analysis():
     """Show environment analysis dashboard"""
