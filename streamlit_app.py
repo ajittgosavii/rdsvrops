@@ -9259,7 +9259,6 @@ def show_migration_configuration():
         if source_engine:
             st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
     
-      
     with col2:
         st.markdown("### 📤 Target AWS Database")
         
@@ -9271,16 +9270,8 @@ def show_migration_configuration():
                 format_func=lambda x: DatabaseEngine.ENGINES.get(x, {'name': x.title()})['name'] if x in DatabaseEngine.ENGINES else x.replace('-', ' ').title(),
                 key="target_engine"
             )
-            
-            if target_engine:
-                migration_type = DatabaseEngine.get_migration_type(source_engine, target_engine)
-                complexity = DatabaseEngine.get_complexity_multiplier(source_engine, target_engine)
-                
-                st.markdown(f"""
-                **Migration Type:** {migration_type.title()}  
-                **Complexity Factor:** {complexity:.1f}x  
-                **Estimated Effort:** {'Low' if complexity < 1.5 else 'Medium' if complexity < 2.0 else 'High'}
-                """)
+        if source_engine:
+            st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
     
     # Migration parameters
     st.markdown("### ⚙️ Migration Parameters")
