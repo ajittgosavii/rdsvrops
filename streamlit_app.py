@@ -8179,21 +8179,21 @@ def show_environment_analysis_tab():
 
 """Environment setup with vROps option"""
     
-    st.markdown("## 📊 Environment Configuration")
+        st.markdown("## 📊 Environment Configuration")
     
-    if not st.session_state.migration_params:
-        st.warning("⚠️ Please complete Migration Configuration first.")
-        return
-    
-    # Configuration method selection
-    config_method = st.radio(
-        "Choose configuration method:",
-        [
-            "🔗 Import from vROps",  # <-- NEW OPTION
-            "📝 Manual Configuration",
-            "📁 Bulk Upload"
-        ],
-        horizontal=True
+        if not st.session_state.migration_params:
+            st.warning("⚠️ Please complete Migration Configuration first.")
+            return
+        
+        # Configuration method selection
+        config_method = st.radio(
+            "Choose configuration method:",
+            [
+                "🔗 Import from vROps",  # <-- NEW OPTION
+                "📝 Manual Configuration",
+                "📁 Bulk Upload"
+            ],
+            horizontal=True
     )
     
     if config_method == "🔗 Import from vROps":
