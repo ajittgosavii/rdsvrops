@@ -18,13 +18,6 @@ import hashlib
 import tempfile
 import os
 import anthropic 
-import requests
-import json
-import urllib3
-from datetime import datetime, timedelta
-
-# Disable SSL warnings for self-signed certificates
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # PDF Generation imports
 from reportlab.lib import colors
@@ -7807,152 +7800,7 @@ def show_results_dashboard_simple():
     
     with tabs[7]:  # Timeline
         show_timeline_analysis_tab()
-        
-        
-def show_vrops_dashboard():
-    """Show vROps data dashboard"""
-    
-    st.markdown("### 📊 vROps Data Dashboard")
-    
-    servers = st.session_state.vrops_servers
-    db_servers = st.session_state.vrops_database_servers
-    analysis = st.session_state.vrops_analysis
-    
-    # Summary metrics
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Total Servers", len(servers))
-    
-    with col2:
-        st.metric("Database Servers", len(db_servers))
-    
-    with col3:
-        if analysis:
-            avg_health = sum([a['health_scores']['overall'] for a in analysis.values()]) / len(analysis)
-            st.metric("Avg Health Score", f"{avg_health:.1f}")
-    
-    with col4:
-        ready_count = sum([1 for a in analysis.values() if a['migration_readiness'] == 'Ready'])
-        st.metric("Migration Ready", f"{ready_count}/{len(analysis)}")
-    
-    # Server list
-    st.markdown("#### 🖥️ Server Inventory")
-    
-    if servers:
-        server_data = []
-        for server in servers:
-            analysis_data = analysis.get(server['id'], {})
-            performance = analysis_data.get('performance_summary', {})
-            aws_rec = analysis_data.get('aws_recommendations', {})
-            
-            server_data.append({
-                'Server Name': server['name'],
-                'CPU Cores': server['cpu_cores'],
-                'Memory (GB)': f"{server['memory_gb']:.1f}",
-                'CPU Usage (%)': f"{performance.get('cpu_usage_avg', 0):.1f}",
-                'Memory Usage (%)': f"{performance.get('memory_usage_avg', 0):.1f}",
-                'AWS Instance': aws_rec.get('instance_class', 'N/A'),
-                'Health Score': f"{analysis_data.get('health_scores', {}).get('overall', 0):.1f}",
-                'Migration Status': analysis_data.get('migration_readiness', 'Unknown')
-            })
-        
-        df = pd.DataFrame(server_data)
-        st.dataframe(df, use_container_width=True)
-    
-    # Actions
-    st.markdown("#### 🎯 Actions")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("🔄 Convert to Environment Specs", use_container_width=True):
-            convert_vrops_to_environments()
-    
-    with col2:
-        if st.button("📊 View Detailed Analysis", use_container_width=True):
-            show_detailed_vrops_analysis()
-    
-    with col3:
-        if st.button("🔌 Reconnect to vROps", use_container_width=True):
-            # Clear data and reconnect
-            for key in ['vrops_servers', 'vrops_database_servers', 'vrops_metrics', 'vrops_analysis']:
-                if key in st.session_state:
-                    st.session_state[key] = []
-            st.experimental_rerun()
 
-
-def show_vrops_results_summary():
-    """Show vROps results in the results dashboard"""
-    
-    if not st.session_state.vrops_analysis:
-        st.info("No vROps analysis data available.")
-        return
-    
-    st.markdown("### 📡 vROps Performance Analysis")
-    
-    analysis = st.session_state.vrops_analysis
-    servers = st.session_state.vrops_servers
-    
-    # Performance summary
-    col1, col2, col3 = st.columns(3)
-    
-    health_scores = [a['health_scores']['overall'] for a in analysis.values()]
-    ready_count = sum([1 for a in analysis.values() if a['migration_readiness'] == 'Ready'])
-    
-    with col1:
-        avg_health = sum(health_scores) / len(health_scores) if health_scores else 0
-        st.metric("Average Health Score", f"{avg_health:.1f}/100")
-    
-    with col2:
-        st.metric("Migration Ready", f"{ready_count}/{len(analysis)}")
-    
-    with col3:
-        db_servers = len(st.session_state.vrops_database_servers)
-        st.metric("Database Servers", db_servers)
-    
-    # Health distribution chart
-    if health_scores:
-        fig = go.Figure()
-        
-        server_names = [next((s['name'] for s in servers if s['id'] == sid), sid) 
-                       for sid in analysis.keys()]
-        
-        fig.add_trace(go.Bar(
-            x=server_names,
-            y=health_scores,
-            marker_color=['green' if score > 80 else 'orange' if score > 60 else 'red' 
-                         for score in health_scores],
-            text=[f"{score:.1f}" for score in health_scores],
-            textposition='auto'
-        ))
-        
-        fig.update_layout(
-            title='Server Health Scores',
-            xaxis_title='Server',
-            yaxis_title='Health Score',
-            height=400
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Performance insights
-    st.markdown("#### 💡 Performance Insights")
-    
-    high_cpu_count = sum([1 for a in analysis.values() 
-                         if a.get('performance_summary', {}).get('cpu_usage_avg', 0) > 80])
-    high_memory_count = sum([1 for a in analysis.values() 
-                            if a.get('performance_summary', {}).get('memory_usage_avg', 0) > 85])
-    
-    if high_cpu_count > 0:
-        st.warning(f"⚠️ {high_cpu_count} servers have high CPU usage (>80%)")
-    
-    if high_memory_count > 0:
-        st.warning(f"⚠️ {high_memory_count} servers have high memory usage (>85%)")
-    
-    if high_cpu_count == 0 and high_memory_count == 0:
-        st.success("✅ All servers show healthy performance metrics")
-    
 
 def show_basic_cost_summary():
     """Show basic cost summary from analysis results"""
@@ -8184,47 +8032,6 @@ def show_environment_analysis_tab():
                     st.write(f"Peak Connections: {specs.get('peak_connections', 'N/A')}")
                     st.write(f"Workload Pattern: {specs.get('workload_pattern', 'N/A')}")
                     st.write(f"Environment Type: {specs.get('environment_type', 'N/A')}")
-
-
-    """Environment setup with vROps option"""
-    
-    st.markdown("## 📊 Environment Configuration")
-    
-    if not st.session_state.migration_params:
-        st.warning("⚠️ Please complete Migration Configuration first.")
-        return
-    
-    # Configuration method selection
-    config_method = st.radio(
-        "Choose configuration method:",
-        [
-            "🔗 Import from vROps",  # <-- NEW OPTION
-            "📝 Manual Configuration",
-            "📁 Bulk Upload"
-        ],
-        horizontal=True
-    )
-    
-    if config_method == "🔗 Import from vROps":
-        # Check if vROps data exists
-        if st.session_state.vrops_servers:
-            st.success("✅ vROps data available!")
-            if st.button("🔄 Use vROps Data for Environment Setup", type="primary"):
-                convert_vrops_to_environments()
-        else:
-            st.info("No vROps data available. Please connect to vROps first.")
-            if st.button("📡 Go to vROps Integration", use_container_width=True):
-                st.session_state.page = "📡 vROps Integration"
-                st.experimental_rerun()
-    
-    elif config_method == "📝 Manual Configuration":
-        show_manual_environment_setup()
-    
-    else:  # Bulk Upload
-        show_bulk_upload_interface()
-
-
-
 
 
 def show_visualizations_tab():
@@ -9031,18 +8838,6 @@ def initialize_session_state():
         if key not in st.session_state:
             st.session_state[key] = default_value
             
-    # ADD these new vROps session state variables
-        if 'vrops_servers' not in st.session_state:
-            st.session_state.vrops_servers = []
-        if 'vrops_analysis' not in st.session_state:
-            st.session_state.vrops_analysis = {}
-        if 'vrops_metrics' not in st.session_state:
-            st.session_state.vrops_metrics = {}
-        if 'vrops_database_servers' not in st.session_state:
-            st.session_state.vrops_database_servers = []
-        if 'vrops_connection_info' not in st.session_state:
-            st.session_state.vrops_connection_info = {}
-            
 
 def test_claude_ai_connection():
     """Test Claude AI integration"""
@@ -9113,8 +8908,7 @@ def main():
                 "📈 Results Dashboard",
                 "🔄 Cost Reconciliation",  # ADD THIS LINE
                 "📄 Reports & Export",
-                "📊 Enhanced Recommendations",
-                "📡 vROps Integration"  # <-- ADD THIS NEW OPTION
+                "📊 Enhanced Recommendations"
             ]
         )
         
@@ -9215,29 +9009,29 @@ def main():
         st.caption(f"**Session:** {len(st.session_state)} variables")
         st.caption(f"**Generated:** {datetime.now().strftime('%H:%M:%S')}")
     
-        # Main content area routing remains the same
-        if page == "🔧 Migration Configuration":
-            show_migration_configuration()
-        elif page == "📊 Environment Setup":
-            show_enhanced_environment_setup_with_cluster_config()
-        elif page == "🌐 Network Analysis":
-            show_network_transfer_analysis()
-        elif page == "🧠 AI Optimizer":
-            show_optimized_recommendations()
-        elif page == "🚀 Analysis & Recommendations":
-            show_analysis_section_fixed()
-        elif page == "📈 Results Dashboard":
-            show_results_dashboard()
-        elif page == "🔄 Cost Reconciliation":  # ADD THIS BLOCK
-            show_cost_reconciliation_page()
-        elif page == "📄 Reports & Export":
-            show_reports_section()
-        elif page == "📊 Enhanced Recommendations":
-            show_enhanced_recommendations_dashboard()
-        elif page == "📡 vROps Integration":
-            show_vrops_main_page()  # ✅ ADD THIS LINE - you were missing the function call!
-        
-
+    # Main content area routing remains the same
+    if page == "🔧 Migration Configuration":
+        show_migration_configuration()
+    elif page == "📊 Environment Setup":
+        show_enhanced_environment_setup_with_cluster_config()
+    elif page == "🌐 Network Analysis":
+        show_network_transfer_analysis()
+    elif page == "🧠 AI Optimizer":
+        show_optimized_recommendations()
+    elif page == "🚀 Analysis & Recommendations":
+        show_analysis_section_fixed()
+    elif page == "📈 Results Dashboard":
+        show_results_dashboard()
+    elif page == "🔄 Cost Reconciliation":  # ADD THIS BLOCK
+        show_cost_reconciliation_page()
+    elif page == "📄 Reports & Export":
+        show_reports_section()
+    elif page == "📊 Enhanced Recommendations":
+        show_enhanced_recommendations_dashboard()
+    else:
+        # Default page
+        st.markdown("## Welcome to the AWS Database Migration Tool")
+        st.markdown("Please select a section from the sidebar to get started.")
             
 def show_migration_configuration():
     """Show migration configuration interface with growth planning"""
@@ -9405,8 +9199,6 @@ def show_migration_configuration():
         st.success("✅ Configuration saved! Proceed to Environment Setup.")
         st.balloons()
 
-      
-    
 def show_environment_analysis():
     """Show environment analysis dashboard"""
     
@@ -9939,7 +9731,7 @@ def show_results_dashboard():
         "🏢 Environment Analysis",
         "📊 Visualizations",
         "🤖 AI Insights",
-        "📅 Timeline"
+        "📅 Timeline",
         "📊 Enhanced Recommendations"
     ])
     
@@ -11229,314 +11021,6 @@ def show_optimized_recommendations():
     if hasattr(st.session_state, 'optimization_results') and st.session_state.optimization_results:
         st.markdown("---")
         display_optimization_results(st.session_state.optimization_results)
-        
-def show_vrops_main_page():
-    """Main vROps integration page"""
-    
-    st.markdown("## 📡 vROps Integration")
-    st.markdown("Extract server and performance data from your on-premise vROps installation")
-    
-    # Check if already connected
-    if st.session_state.vrops_servers:
-        show_vrops_dashboard()
-    else:
-        show_vrops_connection_form()
-
-def show_vrops_connection_form():
-    """Simple vROps connection form"""
-    
-    st.markdown("### 🔌 Connect to vROps")
-    
-    with st.form("vrops_connection"):
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            vrops_host = st.text_input(
-                "vROps Server",
-                placeholder="vrops.company.com",
-                help="IP address or hostname of your vROps server"
-            )
-            
-            username = st.text_input(
-                "Username", 
-                placeholder="admin@vsphere.local"
-            )
-        
-        with col2:
-            password = st.text_input(
-                "Password",
-                type="password"
-            )
-            
-            hours_back = st.selectbox(
-                "Data Collection Period",
-                [24, 48, 168],  # 1 day, 2 days, 1 week
-                index=2,
-                format_func=lambda x: f"{x} hours ({x//24} days)"
-            )
-        
-        # Advanced options
-        with st.expander("Advanced Options"):
-            verify_ssl = st.checkbox(
-                "Verify SSL Certificate", 
-                value=False,
-                help="Uncheck for self-signed certificates"
-            )
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                collect_vms = st.checkbox("Collect Virtual Machines", value=True)
-            with col2:
-                auto_identify_db = st.checkbox("Auto-identify Database Servers", value=True)
-        
-        submitted = st.form_submit_button("🔌 Connect & Extract Data", use_container_width=True)
-        
-        if submitted:
-            if not all([vrops_host, username, password]):
-                st.error("Please fill in all required fields")
-                return
-            
-            # Extract data
-            with st.spinner("Connecting to vROps and extracting data..."):
-                success = simple_vrops_extraction(
-                    vrops_host, username, password, verify_ssl, 
-                    hours_back, collect_vms, auto_identify_db
-                )
-                
-                if success:
-                    st.success("✅ Successfully connected and extracted data!")
-                    st.experimental_rerun()
-                else:
-                    st.error("❌ Connection failed. Please check your credentials.")
-
-# =============================================================================
-# STEP 3: SIMPLIFIED vROPS DATA EXTRACTION
-# =============================================================================
-
-def simple_vrops_extraction(vrops_host, username, password, verify_ssl, 
-                           hours_back, collect_vms, auto_identify_db):
-    """Simplified vROps data extraction"""
-    
-    try:
-        # Basic vROps API connection
-        session = requests.Session()
-        base_url = f"https://{vrops_host}/suite-api/api"
-        
-        # Authenticate
-        auth_url = f"{base_url}/auth/token/acquire"
-        auth_data = {"username": username, "password": password}
-        
-        response = session.post(auth_url, json=auth_data, verify=verify_ssl, timeout=30)
-        
-        if response.status_code != 200:
-            st.error(f"Authentication failed: {response.status_code}")
-            return False
-        
-        token = response.json().get('token')
-        session.headers.update({
-            'Authorization': f'vRealizeOpsToken {token}',
-            'Content-Type': 'application/json'
-        })
-        
-        st.success("✅ Authentication successful")
-        
-        # Get VMs
-        vms_url = f"{base_url}/resources"
-        params = {
-            'adapterKind': 'VMWARE',
-            'resourceKind': 'VirtualMachine',
-            'pageSize': 100
-        }
-        
-        response = session.get(vms_url, params=params, verify=verify_ssl, timeout=60)
-        
-        if response.status_code != 200:
-            st.error(f"Failed to get VMs: {response.status_code}")
-            return False
-        
-        vms = response.json().get('resourceList', [])
-        st.info(f"Found {len(vms)} virtual machines")
-        
-        # Process VMs
-        servers = []
-        server_metrics = {}
-        analysis_results = {}
-        
-        progress_bar = st.progress(0)
-        
-        for i, vm in enumerate(vms[:20]):  # Limit to first 20 VMs for demo
-            progress_bar.progress((i + 1) / min(len(vms), 20))
-            
-            vm_id = vm.get('identifier')
-            vm_name = vm.get('resourceKey', {}).get('name', 'Unknown')
-            
-            # Get basic properties
-            props_url = f"{base_url}/resources/{vm_id}/properties"
-            response = session.get(props_url, verify=verify_ssl, timeout=30)
-            
-            properties = {}
-            if response.status_code == 200:
-                for prop in response.json().get('property', []):
-                    properties[prop['name']] = prop.get('value', '')
-            
-            # Create server object
-            server = {
-                'id': vm_id,
-                'name': vm_name,
-                'type': 'Virtual Machine',
-                'cpu_cores': safe_int(properties.get('config|hardware|num_Cpu', 2)),
-                'memory_gb': safe_float(properties.get('config|hardware|memoryMB', 4096)) / 1024,
-                'storage_gb': safe_float(properties.get('config|hardware|disk_Space', 100000000000)) / (1024**3),
-                'os_type': properties.get('config|guestFullName', 'Unknown'),
-                'power_state': properties.get('summary|runtime|powerState', 'Unknown')
-            }
-            
-            servers.append(server)
-            
-            # Get basic performance metrics
-            stats_url = f"{base_url}/resources/{vm_id}/stats"
-            metric_params = {
-                'statKey': ['cpu|usage_average', 'mem|usage_average'],
-                'begin': int((datetime.now() - timedelta(hours=hours_back)).timestamp() * 1000),
-                'end': int(datetime.now().timestamp() * 1000)
-            }
-            
-            response = session.get(stats_url, params=metric_params, verify=verify_ssl, timeout=30)
-            
-            if response.status_code == 200:
-                stats = response.json()
-                metrics = extract_simple_metrics(stats)
-                server_metrics[vm_id] = metrics
-                
-                # Simple analysis
-                analysis = simple_performance_analysis(server, metrics)
-                analysis_results[vm_id] = analysis
-        
-        # Identify database servers
-        database_servers = []
-        if auto_identify_db:
-            for server in servers:
-                if is_potential_database_server(server):
-                    database_servers.append(server)
-        
-        # Store in session state
-        st.session_state.vrops_servers = servers
-        st.session_state.vrops_database_servers = database_servers
-        st.session_state.vrops_metrics = server_metrics
-        st.session_state.vrops_analysis = analysis_results
-        st.session_state.vrops_connection_info = {
-            'host': vrops_host,
-            'extraction_time': datetime.now().isoformat(),
-            'hours_back': hours_back
-        }
-        
-        st.success(f"✅ Extracted data for {len(servers)} servers ({len(database_servers)} potential database servers)")
-        return True
-        
-    except Exception as e:
-        st.error(f"Error during extraction: {str(e)}")
-        return False
-
-# =============================================================================
-# STEP 4: HELPER FUNCTIONS
-# =============================================================================
-
-def safe_int(value, default=0):
-    """Safely convert to int"""
-    try:
-        return int(float(value)) if value else default
-    except:
-        return default
-
-def safe_float(value, default=0.0):
-    """Safely convert to float"""
-    try:
-        return float(value) if value else default
-    except:
-        return default
-
-def extract_simple_metrics(stats_response):
-    """Extract simple metrics from vROps stats response"""
-    metrics = {
-        'cpu_usage_avg': 0,
-        'memory_usage_avg': 0,
-        'health_score': 50
-    }
-    
-    try:
-        for value in stats_response.get('values', []):
-            stat_key = value['statKey']['key']
-            stat_values = [float(v['data']) for v in value.get('data', []) if v.get('data') is not None]
-            
-            if stat_values:
-                avg_value = sum(stat_values) / len(stat_values)
-                
-                if stat_key == 'cpu|usage_average':
-                    metrics['cpu_usage_avg'] = avg_value
-                elif stat_key == 'mem|usage_average':
-                    metrics['memory_usage_avg'] = avg_value
-    except:
-        pass
-    
-    return metrics
-
-def simple_performance_analysis(server, metrics):
-    """Simple performance analysis"""
-    
-    cpu_usage = metrics.get('cpu_usage_avg', 0)
-    memory_usage = metrics.get('memory_usage_avg', 0)
-    
-    # Simple health scoring
-    cpu_score = 100 if cpu_usage < 70 else 80 if cpu_usage < 85 else 50
-    memory_score = 100 if memory_usage < 80 else 80 if memory_usage < 90 else 50
-    overall_score = (cpu_score + memory_score) / 2
-    
-    # Simple AWS instance recommendation
-    if server['memory_gb'] / server['cpu_cores'] > 6:  # Memory-optimized
-        if server['cpu_cores'] <= 2:
-            instance_class = 'db.r5.large'
-        elif server['cpu_cores'] <= 4:
-            instance_class = 'db.r5.xlarge'
-        else:
-            instance_class = 'db.r5.2xlarge'
-    else:  # General purpose
-        if server['cpu_cores'] <= 2:
-            instance_class = 'db.t3.large'
-        elif server['cpu_cores'] <= 4:
-            instance_class = 'db.m5.xlarge'
-        else:
-            instance_class = 'db.m5.2xlarge'
-    
-    return {
-        'server_name': server['name'],
-        'health_scores': {
-            'cpu': cpu_score,
-            'memory': memory_score,
-            'overall': overall_score
-        },
-        'aws_recommendations': {
-            'instance_class': instance_class,
-            'fit_score': overall_score
-        },
-        'performance_summary': {
-            'cpu_usage_avg': cpu_usage,
-            'memory_usage_avg': memory_usage
-        },
-        'migration_readiness': 'Ready' if overall_score > 70 else 'Needs Attention'
-    }
-
-def is_potential_database_server(server):
-    """Simple database server identification"""
-    name_lower = server['name'].lower()
-    
-    # Check for database keywords in name
-    db_keywords = ['sql', 'oracle', 'postgres', 'mysql', 'db', 'database']
-    has_db_keyword = any(keyword in name_lower for keyword in db_keywords)
-    
-    # Check for sufficient resources (databases typically need more RAM)
-    sufficient_resources = server['memory_gb'] >= 8
-    
-    return has_db_keyword or sufficient_resources
 
 # STEP 6: UPDATE YOUR SESSION STATE (find initialize_session_state function and add this line)
 # Add this line to your defaults dictionary:
