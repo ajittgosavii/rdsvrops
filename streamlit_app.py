@@ -7882,7 +7882,7 @@ def show_vrops_dashboard():
             st.experimental_rerun()
 
 
-ef show_vrops_results_summary():
+def show_vrops_results_summary():
     """Show vROps results in the results dashboard"""
     
     if not st.session_state.vrops_analysis:
