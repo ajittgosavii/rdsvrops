@@ -9259,20 +9259,7 @@ def show_migration_configuration():
         if source_engine:
             st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
     
-    with col2:
-        st.markdown("### 📤 Target AWS Database")
-        
-        if source_engine:
-            target_options = DatabaseEngine.ENGINES[source_engine]['aws_targets']
-            target_engine = st.selectbox(
-                "Target Engine",
-                options=target_options,
-                format_func=lambda x: DatabaseEngine.ENGINES.get(x, {'name': x.title()})['name'] if x in DatabaseEngine.ENGINES else x.replace('-', ' ').title(),
-                key="target_engine"
-            )
-        if source_engine:
-            st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
-    
+      
     with col2:
         st.markdown("### 📤 Target AWS Database")
         
