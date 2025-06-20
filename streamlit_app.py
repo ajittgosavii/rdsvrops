@@ -9235,20 +9235,11 @@ def main():
     elif page == "📊 Enhanced Recommendations":
         show_enhanced_recommendations_dashboard()
     elif page == "📡 vROps Integration":
-    show_vrops_main_page()
-    elif page == "📊 Environment Setup":
-    show_environment_setup_with_vrops()  # <-- CHANGE FROM show_environment_setup()
+        
 
-    elif page == "📈 Results Dashboard":
-        show_results_dashboard_with_vrops()  # <-- CHANGE FROM show_results_dashboard()
-    
-    else:
-        # Default page
-        st.markdown("## Welcome to the AWS Database Migration Tool")
-        st.markdown("Please select a section from the sidebar to get started.")
             
-def show_migration_configuration():
-    """Show migration configuration interface with growth planning"""
+    def show_migration_configuration():
+        """Show migration configuration interface with growth planning"""
     
     st.markdown("## 🔧 Migration Configuration")
     
