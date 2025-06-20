@@ -9215,31 +9215,32 @@ def main():
         st.caption(f"**Session:** {len(st.session_state)} variables")
         st.caption(f"**Generated:** {datetime.now().strftime('%H:%M:%S')}")
     
-    # Main content area routing remains the same
-    if page == "🔧 Migration Configuration":
-        show_migration_configuration()
-    elif page == "📊 Environment Setup":
-        show_enhanced_environment_setup_with_cluster_config()
-    elif page == "🌐 Network Analysis":
-        show_network_transfer_analysis()
-    elif page == "🧠 AI Optimizer":
-        show_optimized_recommendations()
-    elif page == "🚀 Analysis & Recommendations":
-        show_analysis_section_fixed()
-    elif page == "📈 Results Dashboard":
-        show_results_dashboard()
-    elif page == "🔄 Cost Reconciliation":  # ADD THIS BLOCK
-        show_cost_reconciliation_page()
-    elif page == "📄 Reports & Export":
-        show_reports_section()
-    elif page == "📊 Enhanced Recommendations":
-        show_enhanced_recommendations_dashboard()
-    elif page == "📡 vROps Integration":
+        # Main content area routing remains the same
+        if page == "🔧 Migration Configuration":
+            show_migration_configuration()
+        elif page == "📊 Environment Setup":
+            show_enhanced_environment_setup_with_cluster_config()
+        elif page == "🌐 Network Analysis":
+            show_network_transfer_analysis()
+        elif page == "🧠 AI Optimizer":
+            show_optimized_recommendations()
+        elif page == "🚀 Analysis & Recommendations":
+            show_analysis_section_fixed()
+        elif page == "📈 Results Dashboard":
+            show_results_dashboard()
+        elif page == "🔄 Cost Reconciliation":  # ADD THIS BLOCK
+            show_cost_reconciliation_page()
+        elif page == "📄 Reports & Export":
+            show_reports_section()
+        elif page == "📊 Enhanced Recommendations":
+            show_enhanced_recommendations_dashboard()
+        elif page == "📡 vROps Integration":
+            show_vrops_main_page()  # ✅ ADD THIS LINE - you were missing the function call!
         
 
             
-    def show_migration_configuration():
-        """Show migration configuration interface with growth planning"""
+def show_migration_configuration():
+    """Show migration configuration interface with growth planning"""
     
     st.markdown("## 🔧 Migration Configuration")
     
@@ -9255,6 +9256,20 @@ def main():
             key="source_engine"
         )
         
+        if source_engine:
+            st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
+    
+    with col2:
+        st.markdown("### 📤 Target AWS Database")
+        
+        if source_engine:
+            target_options = DatabaseEngine.ENGINES[source_engine]['aws_targets']
+            target_engine = st.selectbox(
+                "Target Engine",
+                options=target_options,
+                format_func=lambda x: DatabaseEngine.ENGINES.get(x, {'name': x.title()})['name'] if x in DatabaseEngine.ENGINES else x.replace('-', ' ').title(),
+                key="target_engine"
+            )
         if source_engine:
             st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
     
