@@ -9253,7 +9253,7 @@ def show_migration_configuration():
             "Source Engine",
             options=list(DatabaseEngine.ENGINES.keys()),
             format_func=lambda x: DatabaseEngine.ENGINES[x]['name'],
-            key="source_engine"
+            key="config_source_engine"
         )
         
         if source_engine:
@@ -9268,7 +9268,7 @@ def show_migration_configuration():
                 "Target Engine",
                 options=target_options,
                 format_func=lambda x: DatabaseEngine.ENGINES.get(x, {'name': x.title()})['name'] if x in DatabaseEngine.ENGINES else x.replace('-', ' ').title(),
-                key="target_engine"
+                key="config_target_engine"
             )
         if source_engine:
             st.info(f"**Features:** {', '.join(DatabaseEngine.ENGINES[source_engine]['features'])}")
